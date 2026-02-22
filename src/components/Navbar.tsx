@@ -1,21 +1,43 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Heart } from "lucide-react";
+import { Menu, X, Heart, Sun, Moon, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLanguage, languages } from "@/contexts/LanguageContext";
+import { TranslationKeys } from "@/lib/translations";
 
-const navLinks = [
-  { to: "/", label: "Home" },
-  { to: "/about", label: "About Us" },
-  { to: "/donate", label: "Donate Food" },
-  { to: "/track", label: "Track" },
-  { to: "/history", label: "History" },
-  { to: "/contact", label: "Contact" },
+const navLinkKeys: { to: string; key: keyof TranslationKeys }[] = [
+  { to: "/", key: "nav_home" },
+  { to: "/about", key: "nav_about" },
+  { to: "/donate", key: "nav_donate" },
+  { to: "/track", key: "nav_track" },
+  { to: "/history", key: "nav_history" },
+  { to: "/contact", key: "nav_contact" },
 ];
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
+  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"));
   const location = useLocation();
+  const { t, language, setLanguage } = useLanguage();
+
+  const toggleDark = () => {
+    const next = !isDark;
+    setIsDark(next);
+    document.documentElement.classList.toggle("dark", next);
+    localStorage.setItem("theme", next ? "dark" : "light");
+  };
+
+  useEffect(() => {
+    const saved = localStorage.getItem("theme");
+    if (saved === "dark") {
+      setIsDark(true);
+      document.documentElement.classList.add("dark");
+    }
+  }, []);
+
+  const currentLang = languages.find((l) => l.code === language);
 
   return (
     <nav className="sticky top-0 z-50 bg-card/90 backdrop-blur-md border-b shadow-sm">
@@ -30,8 +52,8 @@ const Navbar = () => {
         </Link>
 
         {/* Desktop Nav */}
-        <div className="hidden md:flex items-center gap-1">
-          {navLinks.map((link) => (
+        <div className="hidden lg:flex items-center gap-1">
+          {navLinkKeys.map((link) => (
             <Link
               key={link.to}
               to={link.to}
@@ -41,26 +63,113 @@ const Navbar = () => {
                   : "text-muted-foreground"
               }`}
             >
-              {link.label}
+              {t(link.key)}
             </Link>
           ))}
         </div>
 
         <div className="hidden md:flex items-center gap-2">
+          {/* Language Selector */}
+          <div className="relative">
+            <button
+              onClick={() => setLangOpen(!langOpen)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-muted transition-colors text-sm font-medium text-muted-foreground"
+            >
+              <Globe className="w-4 h-4" />
+              <span>{currentLang?.native}</span>
+            </button>
+            <AnimatePresence>
+              {langOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -5 }}
+                  className="absolute right-0 top-full mt-1 w-48 bg-card border rounded-lg shadow-xl z-50 max-h-80 overflow-y-auto"
+                >
+                  {languages.map((lang) => (
+                    <button
+                      key={lang.code}
+                      onClick={() => {
+                        setLanguage(lang.code);
+                        setLangOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors flex items-center justify-between ${
+                        language === lang.code ? "text-primary font-semibold bg-saffron-light" : "text-foreground"
+                      }`}
+                    >
+                      <span>{lang.native}</span>
+                      <span className="text-xs text-muted-foreground">{lang.label}</span>
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          <button
+            onClick={toggleDark}
+            className="p-2 rounded-lg hover:bg-muted transition-colors"
+            aria-label="Toggle dark mode"
+          >
+            {isDark ? <Sun className="w-5 h-5 text-primary" /> : <Moon className="w-5 h-5 text-muted-foreground" />}
+          </button>
           <Link to="/signin">
-            <Button variant="outline" size="sm">Sign In</Button>
+            <Button variant="outline" size="sm">{t("nav_signin")}</Button>
           </Link>
           <Link to="/donate">
             <Button size="sm" className="bg-gradient-saffron text-primary-foreground hover:opacity-90">
-              Donate Now 🍱
+              {t("nav_donate_now")}
             </Button>
           </Link>
         </div>
 
-        {/* Mobile Toggle */}
-        <button className="md:hidden p-2" onClick={() => setIsOpen(!isOpen)}>
-          {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
+        <div className="flex items-center gap-2 md:hidden">
+          {/* Mobile Language */}
+          <div className="relative">
+            <button
+              onClick={() => setLangOpen(!langOpen)}
+              className="p-2 rounded-lg hover:bg-muted transition-colors"
+            >
+              <Globe className="w-5 h-5 text-muted-foreground" />
+            </button>
+            <AnimatePresence>
+              {langOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -5 }}
+                  className="absolute right-0 top-full mt-1 w-48 bg-card border rounded-lg shadow-xl z-50 max-h-64 overflow-y-auto"
+                >
+                  {languages.map((lang) => (
+                    <button
+                      key={lang.code}
+                      onClick={() => {
+                        setLanguage(lang.code);
+                        setLangOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors flex items-center justify-between ${
+                        language === lang.code ? "text-primary font-semibold bg-saffron-light" : "text-foreground"
+                      }`}
+                    >
+                      <span>{lang.native}</span>
+                      <span className="text-xs text-muted-foreground">{lang.label}</span>
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+          <button
+            onClick={toggleDark}
+            className="p-2 rounded-lg hover:bg-muted transition-colors"
+            aria-label="Toggle dark mode"
+          >
+            {isDark ? <Sun className="w-5 h-5 text-primary" /> : <Moon className="w-5 h-5 text-muted-foreground" />}
+          </button>
+          <button className="p-2" onClick={() => setIsOpen(!isOpen)}>
+            {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile Menu */}
@@ -73,7 +182,7 @@ const Navbar = () => {
             className="md:hidden overflow-hidden bg-card border-t"
           >
             <div className="px-4 py-3 flex flex-col gap-1">
-              {navLinks.map((link) => (
+              {navLinkKeys.map((link) => (
                 <Link
                   key={link.to}
                   to={link.to}
@@ -84,15 +193,15 @@ const Navbar = () => {
                       : "text-muted-foreground"
                   }`}
                 >
-                  {link.label}
+                  {t(link.key)}
                 </Link>
               ))}
               <div className="flex gap-2 mt-2">
                 <Link to="/signin" className="flex-1" onClick={() => setIsOpen(false)}>
-                  <Button variant="outline" size="sm" className="w-full">Sign In</Button>
+                  <Button variant="outline" size="sm" className="w-full">{t("nav_signin")}</Button>
                 </Link>
                 <Link to="/donate" className="flex-1" onClick={() => setIsOpen(false)}>
-                  <Button size="sm" className="w-full bg-gradient-saffron text-primary-foreground">Donate 🍱</Button>
+                  <Button size="sm" className="w-full bg-gradient-saffron text-primary-foreground">{t("nav_donate_now")}</Button>
                 </Link>
               </div>
             </div>
