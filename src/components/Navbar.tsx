@@ -1,9 +1,10 @@
+import { useLanguage } from "@/hooks/use-language";
+import { languages } from "@/lib/languages";
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, Heart, Sun, Moon, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import { useLanguage, languages } from "@/contexts/LanguageContext";
 import { TranslationKeys } from "@/lib/translations";
 
 const navLinkKeys: { to: string; key: keyof TranslationKeys }[] = [
