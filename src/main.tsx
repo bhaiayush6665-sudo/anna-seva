@@ -1,7 +1,7 @@
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
-import { LanguageProvider } from "@/contexts/Languageprovider";
+import { LanguageProvider } from "@/contexts/LanguageProvider";
 
 createRoot(document.getElementById("root")!).render(
   <LanguageProvider>
